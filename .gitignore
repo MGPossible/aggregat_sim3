@@ -1,0 +1,19 @@
+# Abhängigkeiten und Build-Artefakte
+node_modules/
+dist/
+coverage/
+.vite/
+browser-check/
+
+# Lokale Werkzeuge / Umgebungsvariablen
+.tooling/
+.env
+.env.local
+*.tsbuildinfo
+
+# Editor / Betriebssystem
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

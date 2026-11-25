@@ -27,7 +27,7 @@ export function buildReadoutRows(snapshot: SimSnapshot): Row[] {
     rows.push({
       term: 'Abhebung von der Wand',
       value: `${formatNumber(snapshot.detachment * 100, 1)} %`,
-      note: snapshot.stageLabel,
+      note: `Haftstellen noch ${formatNumber(snapshot.geometry.attachment * 100, 0)} % kontaktiert`,
     });
   }
 

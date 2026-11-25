@@ -118,6 +118,23 @@ VITE_BASE=/ npm run build
 Der Basispfad wird in GitHub Actions aus `GITHUB_REPOSITORY` bestimmt; ein hartcodierter
 Pfad ist nicht nötig. Alle Asset-Referenzen laufen über diese Basis.
 
+### ZIP-Deliverable
+
+Das mitgelieferte `plasmolyse-simulation.zip` enthält das Repository inklusive
+Git-Geschichte auf Branch `main` (ohne `node_modules`, `dist` und Prüfscreenshots):
+
+```bash
+unzip plasmolyse-simulation.zip
+cd plasmolyse-simulation
+npm install
+npm run build     # und npm test, npm run lint, npm run preview
+git remote add origin https://github.com/<DEIN-USER>/<DEIN-REPO>.git
+git push -u origin main
+```
+
+Nach dem Push (und `Settings → Pages → Source: GitHub Actions`) läuft die Simulation
+unter `https://<DEIN-USER>.github.io/<DEIN-REPO>/`.
+
 ---
 
 ## 5. Projektstruktur

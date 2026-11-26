@@ -41,6 +41,13 @@ und zeigt die Teilchen als Punkte – nicht nur als Pfeile.
 - Didaktikbereiche: Phänomen, Stadien, Gleichungen, KNO₃-Effekt, tierische Zellen,
   Modellgrenzen, sechs Experimentieraufgaben, Quellen.
 
+**Optik**
+
+- Design-System im Look der MG-Possible-Lab-Simulationen: dunkles Marine
+  (`#0c151c`), Karten mit Teel- (`#67d4cb`) und Gold-Akzent (`#efc16f`),
+  Auswertungen in Cascadia Code, Topbar mit MG-Marke, Status-Pills und
+  schwebende Werkzeugleiste im Mikroskopfeld. Nur Systemschriften, kein CDN.
+
 ---
 
 ## 2. Technologien

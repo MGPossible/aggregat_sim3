@@ -1,5 +1,3 @@
-import { SOURCES } from './sources';
-
 interface Block {
   title: string;
   body: React.ReactNode;
@@ -198,28 +196,16 @@ const BLOCKS: Block[] = [
 
 export function InfoPanels(): React.ReactElement {
   return (
-    <div className="info">
+    <div className="info-grid">
       {BLOCKS.map((block) => (
-        <details className="info__section" key={block.title}>
-          <summary>{block.title}</summary>
-          <div className="info__body">{block.body}</div>
+        <details className="info-section" key={block.title}>
+          <summary>
+            {block.title}
+            <span aria-hidden="true">+</span>
+          </summary>
+          <div className="info-content">{block.body}</div>
         </details>
       ))}
-      <details className="info__section" key="sources">
-        <summary>Quellen der fachlichen Angaben</summary>
-        <div className="info__body">
-          <ul className="sources">
-            {SOURCES.map((source) => (
-              <li key={source.url}>
-                <a href={source.url} target="_blank" rel="noreferrer noopener">
-                  {source.title}
-                </a>
-                <span className="sources__kind">{source.kind}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </details>
     </div>
   );
 }

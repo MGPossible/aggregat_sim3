@@ -105,13 +105,13 @@ export function TimeChart({ history, snapshot, events, series, species }: TimeCh
             {
               key: 'inside',
               label: 'Osmolarität innen',
-              color: '#7fd8e8',
+              color: '#67d4cb',
               points: samples.map((s) => ({ x: mapX(s.time_s), y: mapY(s.osmolarityInside) })),
             },
             {
               key: 'outside',
               label: 'Osmolarität außen (Reservoir)',
-              color: '#f2b13c',
+              color: '#efc16f',
               points: samples.map((s) => ({ x: mapX(s.time_s), y: mapY(s.osmolarityOutside) })),
             },
           ]
@@ -126,7 +126,7 @@ export function TimeChart({ history, snapshot, events, series, species }: TimeCh
               {
                 key: `${species}-out`,
                 label: `${SPECIES[species].symbol} außen`,
-                color: 'rgba(233, 244, 246, 0.5)',
+                color: 'rgba(237, 241, 237, 0.5)',
                 points: samples.map((s) => ({ x: mapX(s.time_s), y: mapY(snapshot.outside[species]) })),
               },
             ]
@@ -135,7 +135,7 @@ export function TimeChart({ history, snapshot, events, series, species }: TimeCh
                 {
                   key: 'turgor',
                   label: 'Turgor Ψp (MPa)',
-                  color: '#8ee06a',
+                  color: '#a8efa0',
                   points: samples.map((s) => ({ x: mapX(s.time_s), y: mapY(s.turgorMPa) })),
                 },
               ]
@@ -144,7 +144,7 @@ export function TimeChart({ history, snapshot, events, series, species }: TimeCh
                   {
                     key: 'potential',
                     label: 'Membranpotential (mV)',
-                    color: '#c58cff',
+                    color: '#b48cff',
                     points: samples.map((s) => ({ x: mapX(s.time_s), y: mapY(s.potential_mV ?? 0) })),
                   },
                 ]
@@ -152,7 +152,7 @@ export function TimeChart({ history, snapshot, events, series, species }: TimeCh
                   {
                     key: 'volume',
                     label: `Volumen (${volumeUnit(snapshot.cellKind)})`,
-                    color: '#6fd3ff',
+                    color: '#8ce0d6',
                     points: samples.map((s) => ({
                       x: mapX(s.time_s),
                       y: mapY(toDisplayVolume(s.volume_pL, snapshot.cellKind)),
@@ -233,7 +233,22 @@ export function TimeChart({ history, snapshot, events, series, species }: TimeCh
         {lines.map((line) => {
           const last = line.points.at(-1);
           if (last === undefined) return null;
-          return <circle key={`dot-${line.key}`} cx={last.x} cy={last.y} r={3.5} fill={line.color} />;
+          return (
+            <g key={`dot-${line.key}`}>
+              <circle
+                cx={last.x}
+                cy={last.y}
+                r="9"
+                fill={line.color}
+                fillOpacity="0.16"
+                stroke={line.color}
+                strokeOpacity="0.55"
+                strokeWidth="1.2"
+                pointerEvents="none"
+              />
+              <circle cx={last.x} cy={last.y} r="4" className="chart__dot" fill={line.color} pointerEvents="none" />
+            </g>
+          );
         })}
       </svg>
 

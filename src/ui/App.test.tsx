@@ -12,8 +12,8 @@ function text(selector: string): string {
 }
 
 function buttonByLabel(label: string): HTMLButtonElement | undefined {
-  return Array.from(container.querySelectorAll('button')).find(
-    (node) => (node.textContent ?? '').trim() === label,
+  return Array.from(container.querySelectorAll('button')).find((node) =>
+    (node.textContent ?? '').trim().includes(label),
   );
 }
 
@@ -37,14 +37,17 @@ afterEach(() => {
 
 describe('Benutzeroberfläche (Smoke-Test im jsdom)', () => {
   it('rendert Titel, Canvas und Steuerung', () => {
-    expect(text('.app__title')).toContain('Plasmolyse');
-    expect(container.querySelector('canvas')).not.toBeNull();
+    expect(text('.intro-row .eyebrow')).toContain('PLASMOLYSE');
+    expect(text('.hero-title')).toContain('Wasser verlieren');
+    expect(text('.brand-name')).toContain('MG Possible Lab');
+    expect(container.querySelector('.viewer-shell canvas')).not.toBeNull();
     expect(container.querySelector('#medium-nacl-range')).not.toBeNull();
     expect(container.querySelector('#medium-nacl-number')).not.toBeNull();
     expect(container.querySelector('#internal-osmolarity-range')).not.toBeNull();
     expect(container.querySelector('#adhesion-range')).not.toBeNull();
     expect(container.querySelector('.concentrations__table')).not.toBeNull();
     expect(container.querySelector('.chart__svg')).not.toBeNull();
+    expect(container.querySelector('.source-card')).not.toBeNull();
   });
 
   it('zeigt Messtexte statt nur Grafiken', () => {
@@ -91,7 +94,8 @@ describe('Benutzeroberfläche (Smoke-Test im jsdom)', () => {
     ) as HTMLButtonElement | undefined;
     expect(option).toBeDefined();
     act(() => option?.click());
-    expect(text('.stage__status')).toContain('Erythrozyt');
+    const canvas = container.querySelector('canvas');
+    expect(canvas?.getAttribute('aria-label') ?? '').toContain('Erythrozyt');
     const numberField = container.querySelector('#medium-nacl-number') as HTMLInputElement;
     expect(numberField.value).toBe('154');
     // Der Haftungs-Regler ist nur bei pflanzlichen Zellen sinnvoll.

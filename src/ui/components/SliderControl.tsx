@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { formatNumber, parseNumberInput } from '../../sim/format';
 
 export interface SliderControlProps {
@@ -13,12 +14,17 @@ export interface SliderControlProps {
   hint?: string;
   /** Zusätzliche Anzeige, z. B. % (w/v) zu mmol/L. */
   secondary?: string;
+  /** Beschriftung links/rechts unter dem Balken. */
+  rangeLabels?: [string, string];
+  /** Goldene Spur (für neutre Löste wie Saccharose) statt Teel. */
+  tone?: 'teal' | 'gold';
   disabled?: boolean;
   onChange: (value: number) => void;
 }
 
 /**
- * Schieberegler mit synchronisiertem Zahlenfeld.
+ * Schieberegler im Look der Referenzsimulation: gefüllte Spur über
+ * `--range-fill`, großes rundes Thumb, synchronisiertes Zahlenfeld.
  * Das Zahlenfeld akzeptiert Komma und Punkt (iPad-Tastatur) und wird erst bei
  * Enter oder Blur übernommen, damit beim Tippen keine halben Werte entstehen.
  */
@@ -33,6 +39,8 @@ export function SliderControl({
   decimals = 1,
   hint,
   secondary,
+  rangeLabels,
+  tone = 'teal',
   disabled = false,
   onChange,
 }: SliderControlProps): React.ReactElement {
@@ -57,14 +65,14 @@ export function SliderControl({
 
   const rangeId = `${id}-range`;
   const numberId = `${id}-number`;
+  const clamped = Math.min(max, Math.max(min, value));
+  const fill = `${((clamped - min) / Math.max(max - min, 1e-9)) * 100}%`;
 
   return (
-    <div className={`control${disabled ? ' control--disabled' : ''}`}>
-      <div className="control__head">
-        <label className="control__label" htmlFor={rangeId}>
-          {label}
-        </label>
-        <div className="control__value">
+    <div className={`slider-block${disabled ? ' control--disabled' : ''}`}>
+      <div className="slider-head">
+        <label htmlFor={rangeId}>{label}</label>
+        <span className="slider-value">
           <input
             id={numberId}
             className="control__number"
@@ -89,29 +97,36 @@ export function SliderControl({
             }}
           />
           <span className="control__unit">{unit}</span>
-        </div>
+        </span>
       </div>
       <input
         id={rangeId}
-        className="control__range"
+        className={`concentration-slider${tone === 'gold' ? ' is-gold' : ''}`}
         type="range"
         min={min}
         max={max}
         step={step}
-        value={Math.min(max, Math.max(min, value))}
+        value={clamped}
         disabled={disabled}
+        style={{ '--range-fill': fill } as CSSProperties}
         onChange={(event) => {
           const next = Number(event.target.value);
           onChange(next);
           setEditing(false);
           setText(formatNumber(next, decimals));
         }}
-        aria-describedby={hint ? `${id}-hint` : undefined}
+        aria-describedby={hint || secondary ? `${id}-hint` : undefined}
         aria-valuetext={`${formatNumber(value, decimals)} ${unit}`}
       />
+      {rangeLabels !== undefined && (
+        <div className="range-labels">
+          <span>{rangeLabels[0]}</span>
+          <span>{rangeLabels[1]}</span>
+        </div>
+      )}
       {(hint !== undefined || secondary !== undefined) && (
-        <p className="control__hint" id={`${id}-hint`}>
-          {secondary !== undefined && <span className="control__secondary">{secondary}</span>}
+        <p className="slider-hint" id={`${id}-hint`}>
+          {secondary !== undefined && <strong>{secondary}</strong>}
           {hint !== undefined && <span>{hint}</span>}
         </p>
       )}

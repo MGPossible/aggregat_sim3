@@ -49,7 +49,11 @@ export function ConcentrationTable({
             return (
               <tr key={species.id}>
                 <th scope="row">
-                  <span className="species__chip" style={{ backgroundColor: species.color }} aria-hidden="true" />
+                  <span
+                    className={`species__chip${species.shape === 'diamond' ? ' is-diamond' : ''}`}
+                    style={{ backgroundColor: species.color }}
+                    aria-hidden="true"
+                  />
                   <span className="species__symbol">{species.symbol}</span>
                   <span className="species__charge">
                     {species.charge === 0 ? 'neutral' : species.charge > 0 ? '+' : '−'}

@@ -70,7 +70,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, width: number, height: nu
   ctx.fillRect(0, 0, width, height);
 
   // Dezentes Raster hilft beim Abschätzen von Größenordnungen.
-  ctx.strokeStyle = 'rgba(255,255,255,0.045)';
+  ctx.strokeStyle = PALETTE.grid;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let x = 28; x < width; x += 28) {
@@ -109,7 +109,7 @@ function drawParticleShape(
   ctx.fill();
   // Dunkle Kontur hält den Kontrast auch auf hellem Zytoplasma.
   ctx.globalAlpha = alpha * 0.55;
-  ctx.strokeStyle = 'rgba(4, 16, 24, 0.9)';
+  ctx.strokeStyle = PALETTE.particleOutline;
   ctx.lineWidth = 1;
   ctx.stroke();
 }
@@ -290,7 +290,7 @@ function drawScaleBar(ctx: CanvasRenderingContext2D, width: number, height: numb
   ctx.lineTo(x + barPx, y + 4);
   ctx.stroke();
   ctx.fillStyle = PALETTE.text;
-  ctx.font = '500 13px system-ui, sans-serif';
+  ctx.font = '500 12px "Cascadia Code", "SFMono-Regular", Consolas, monospace';
   ctx.textBaseline = 'bottom';
   ctx.fillText(`${chosen} µm`, x, y - 7);
 }
@@ -300,11 +300,11 @@ function drawCaption(ctx: CanvasRenderingContext2D, snapshot: SimSnapshot): void
   const halfX = envelope.reduce((max, p) => Math.max(max, Math.abs(p.x)), 0);
   const halfY = envelope.reduce((max, p) => Math.max(max, Math.abs(p.y)), 0);
   ctx.fillStyle = PALETTE.text;
-  ctx.font = '600 15px system-ui, sans-serif';
+  ctx.font = '600 15px "Segoe UI", Arial, sans-serif';
   ctx.textBaseline = 'top';
   ctx.fillText(snapshot.stageLabel, 18, 16);
   ctx.fillStyle = PALETTE.textMuted;
-  ctx.font = '400 13px system-ui, sans-serif';
+  ctx.font = '400 12px "Cascadia Code", "SFMono-Regular", Consolas, monospace';
   const dimensions =
     snapshot.cellKind === 'plant'
       ? `Zellwand ca. ${Math.round(halfX * 2)} × ${Math.round(halfY * 2)} µm`
@@ -332,7 +332,7 @@ export function renderScene(
     // Zellwand
     ctx.save();
     tracePath(ctx, envPoints);
-    ctx.fillStyle = 'rgba(201, 180, 137, 0.10)';
+    ctx.fillStyle = PALETTE.wallFill;
     ctx.fill();
     ctx.strokeStyle = PALETTE.wall;
     ctx.lineWidth = Math.min(Math.max(1.2 * t.pxPerUm, 2), 16);
@@ -402,9 +402,9 @@ export function renderScene(
   drawCaption(ctx, snapshot);
 
   if (snapshot.lysed) {
-    ctx.fillStyle = '#ffb3c6';
-    ctx.font = '600 14px system-ui, sans-serif';
+    ctx.fillStyle = '#f0b6c7';
+    ctx.font = '600 13px "Segoe UI", Arial, sans-serif';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Hämolyse – Inhalt frei gesetzt (irreversibel)', 18, height - 52);
+    ctx.fillText('Hämolyse – Inhalt frei gesetzt (irreversibel)', 18, height - 92);
   }
 }

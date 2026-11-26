@@ -1,60 +1,71 @@
-import { MEDIUM_PRESETS, percentFromMmolL, type CellKind, type MediumPreset, type MediumSalts } from '../../sim/cellModel';
+import {
+  MEDIUM_PRESETS,
+  mediumOsmolarity,
+  percentFromMmolL,
+  type MediumPreset,
+  type MediumSalts,
+} from '../../sim/cellModel';
 import type { SimParams } from '../../sim/engine';
 import { formatNumber } from '../../sim/format';
 import { SPECIES, type SpeciesId } from '../../sim/species';
 import { SliderControl } from './SliderControl';
-import { SegmentedControl } from './SegmentedControl';
-
-export interface ViewSettings {
-  showParticles: boolean;
-  showWaterArrows: boolean;
-  showIonFlux: boolean;
-  viewHeight_um: number;
-}
 
 export interface ControlPanelProps {
   params: SimParams;
-  view: ViewSettings;
+  running: boolean;
   onMedium: (medium: MediumSalts) => void;
   onPermeability: (species: SpeciesId, value: number) => void;
   onTemperature: (celsius: number) => void;
   onSpeed: (speed: number) => void;
   onAdhesion: (adhesion: number) => void;
   onInternalOsmolarity: (mmolL: number) => void;
-  onView: (view: ViewSettings) => void;
+  onToggleRunning: () => void;
+  onReset: () => void;
+  /** Erläuterung unter den Bedienelementen (Flussrichtung, Modellhinweis). */
+  hint: string;
+  /** true, wenn der Wasserfluss aus der Zelle heraus zeigt (Plasmolyse). */
+  outward: boolean;
 }
 
 const PERMEABLE_SPECIES: readonly SpeciesId[] = ['Na', 'K', 'Cl', 'NO3'];
 
-const SPEED_OPTIONS = [
-  { value: '0.25', label: '0,25×' },
-  { value: '0.5', label: '0,5×' },
-  { value: '1', label: '1×' },
-  { value: '2', label: '2×' },
-  { value: '4', label: '4×' },
-];
+const SPEED_OPTIONS = ['0.25', '0.5', '1', '2', '4'] as const;
 
 export function ControlPanel({
   params,
-  view,
+  running,
   onMedium,
   onPermeability,
   onTemperature,
   onSpeed,
   onAdhesion,
   onInternalOsmolarity,
-  onView,
+  onToggleRunning,
+  onReset,
+  hint,
+  outward,
 }: ControlPanelProps): React.ReactElement {
   const presets = MEDIUM_PRESETS.filter((preset: MediumPreset) => preset.kind === params.cellKind);
+  const outside = mediumOsmolarity(params.medium);
 
   const setSalt = (key: keyof MediumSalts, value: number): void => {
     onMedium({ ...params.medium, [key]: value });
   };
 
   return (
-    <div className="panel-stack">
-      <section className="panel" aria-labelledby="medium-heading">
-        <h3 id="medium-heading">Außenmedium (Reservoir)</h3>
+    <section className="control-panel panel" aria-labelledby="control-heading">
+      <div className="control-topline">
+        <div>
+          <div className="panel-kicker">EXPERIMENT STEUERN</div>
+          <h2 id="control-heading">Außenmedium (Reservoir)</h2>
+        </div>
+        <div className="value-readout" aria-live="polite">
+          <strong>{formatNumber(outside, 0)}</strong>
+          <span>mmol/L Teilchen</span>
+        </div>
+      </div>
+
+      <div className="slider-wrap">
         <SliderControl
           id="medium-nacl"
           label="Natriumchlorid"
@@ -65,6 +76,7 @@ export function ControlPanel({
           step={1}
           decimals={0}
           secondary={`${formatNumber(percentFromMmolL('naCl', params.medium.naCl), 2)} % (w/v)`}
+          rangeLabels={['0 mM · destilliert', '500 mM · sehr hypertonisch']}
           hint="Na⁺ und Cl⁻ – 1 mmol/L NaCl liefert 2 mmol/L Teilchen."
           onChange={(value) => setSalt('naCl', value)}
         />
@@ -78,6 +90,7 @@ export function ControlPanel({
           step={1}
           decimals={0}
           secondary={`${formatNumber(percentFromMmolL('kno3', params.medium.kno3), 2)} % (w/v)`}
+          rangeLabels={['0 mM', '500 mM']}
           hint="K⁺ und NO₃⁻ permeieren die Membran deutlich schneller als Na⁺ → automatische Deplasmolyse."
           onChange={(value) => setSalt('kno3', value)}
         />
@@ -90,10 +103,13 @@ export function ControlPanel({
           max={700}
           step={1}
           decimals={0}
+          tone="gold"
           secondary={`${formatNumber(percentFromMmolL('sucrose', params.medium.sucrose), 2)} % (w/v)`}
+          rangeLabels={['0 mM', '700 mM']}
           hint="Zucker ist groß und elektrisch neutral – die Membran ist für ihn undurchlässig."
           onChange={(value) => setSalt('sucrose', value)}
         />
+
         <div className="presets" role="group" aria-label="Medium-Voreinstellungen">
           {presets.map((preset) => (
             <button
@@ -108,141 +124,114 @@ export function ControlPanel({
             </button>
           ))}
         </div>
-      </section>
+      </div>
 
-      <section className="panel" aria-labelledby="permeability-heading">
-        <h3 id="permeability-heading">Membranpermeabilität der Ionen</h3>
-        <p className="panel__intro">
-          Wie leicht Teilchen die Membran durchtreten. Bei 0 sind sie undurchlässig – dann bleibt die
-          Plasmolyse bestehen.
-        </p>
-        {PERMEABLE_SPECIES.map((id) => (
-          <SliderControl
-            key={id}
-            id={`perm-${id}`}
-            label={SPECIES[id].symbol}
-            unit="·10⁻⁸ m/s"
-            value={params.permeabilities[id] * 1e8}
-            min={0}
-            max={20}
-            step={0.1}
-            decimals={1}
-            onChange={(value) => onPermeability(id, value * 1e-8)}
-          />
-        ))}
-        <p className="panel__note">
-          Saccharose (Z) und fixierte Anionen (A⁻) sind undurchlässig: Sie erzeugen den osmotischen Druck,
-          können die Membran aber nicht passieren.
-        </p>
-      </section>
+      <div className="control-grid">
+        <div className="control-group">
+          <div className="control-group__head">MEMBRANPERMEABILITÄT DER IONEN</div>
+          {PERMEABLE_SPECIES.map((id) => (
+            <SliderControl
+              key={id}
+              id={`perm-${id}`}
+              label={SPECIES[id].symbol}
+              unit="·10⁻⁸ m/s"
+              value={params.permeabilities[id] * 1e8}
+              min={0}
+              max={20}
+              step={0.1}
+              decimals={1}
+              onChange={(value) => onPermeability(id, value * 1e-8)}
+            />
+          ))}
+          <p className="slider-hint">
+            Saccharose (Z) und fixierte Anionen (A⁻) sind undurchlässig: Sie erzeugen den osmotischen
+            Druck, können die Membran aber nicht passieren.
+          </p>
+        </div>
 
-      <section className="panel" aria-labelledby="cell-heading">
-        <h3 id="cell-heading">Zellinneres</h3>
-        <SliderControl
-          id="internal-osmolarity"
-          label="Zellsaft (Osmolarität innen)"
-          unit="mmol/L"
-          value={params.internalOsmolarity}
-          min={100}
-          max={400}
-          step={1}
-          decimals={0}
-          hint="Alle Teilchensorten werden im gleichen Verhältnis skaliert. Der Wert bestimmt, bei welcher Außenkonzentration die Grenzplasmolyse liegt."
-          onChange={onInternalOsmolarity}
-        />
-        {params.cellKind === 'plant' && (
+        <div className="control-group">
+          <div className="control-group__head">ZELLINNERES</div>
           <SliderControl
-            id="adhesion"
-            label="Wandhaftung des Protoplasten"
-            unit="%"
-            value={params.adhesion * 100}
-            min={0}
-            max={100}
+            id="internal-osmolarity"
+            label="Zellsaft (Osmolarität innen)"
+            unit="mmol/L"
+            value={params.internalOsmolarity}
+            min={100}
+            max={400}
             step={1}
             decimals={0}
-            hint="Hohe Haftung (Hecht’sche Fäden): konkave Form. Geringe Haftung: rundliche, konvexe Ablösung."
-            onChange={(value) => onAdhesion(value / 100)}
+            rangeLabels={['100 mM', '400 mM']}
+            hint="Alle Teilchensorten werden im gleichen Verhältnis skaliert. Der Wert bestimmt, bei welcher Außenkonzentration die Grenzplasmolyse liegt."
+            onChange={onInternalOsmolarity}
           />
-        )}
-      </section>
+          {params.cellKind === 'plant' && (
+            <SliderControl
+              id="adhesion"
+              label="Wandhaftung des Protoplasten"
+              unit="%"
+              value={params.adhesion * 100}
+              min={0}
+              max={100}
+              step={1}
+              decimals={0}
+              rangeLabels={['konvex (rundlich)', 'konkav (Hecht’sche Fäden)']}
+              hint="Hohe Haftung (Hecht’sche Fäden): konkave Form. Geringe Haftung: rundliche, konvexe Ablösung."
+              onChange={(value) => onAdhesion(value / 100)}
+            />
+          )}
+        </div>
 
-      <section className="panel" aria-labelledby="conditions-heading">
-        <h3 id="conditions-heading">Bedingungen &amp; Ansicht</h3>
-        <SliderControl
-          id="temperature"
-          label="Temperatur"
-          unit="°C"
-          value={params.temperatureC}
-          min={5}
-          max={40}
-          step={0.5}
-          decimals={1}
-          hint="Temperatur erhöht sowohl den osmotischen Druck (π ∝ T) als auch die Brownsche Bewegung."
-          onChange={onTemperature}
-        />
-        <div className="control">
-          <div className="control__head">
-            <span className="control__label" id="speed-label">
-              Zeitfaktor
-            </span>
-          </div>
-          <SegmentedControl
-            label="Simulationsgeschwindigkeit"
-            options={SPEED_OPTIONS}
-            value={String(params.speed)}
-            onChange={(value) => onSpeed(Number(value))}
-            size="small"
+        <div className="control-group">
+          <div className="control-group__head">BEDINGUNGEN</div>
+          <SliderControl
+            id="temperature"
+            label="Temperatur"
+            unit="°C"
+            value={params.temperatureC}
+            min={5}
+            max={40}
+            step={0.5}
+            decimals={1}
+            rangeLabels={['5 °C', '40 °C']}
+            hint="Temperatur erhöht sowohl den osmotischen Druck (π ∝ T) als auch die Brownsche Bewegung."
+            onChange={onTemperature}
           />
         </div>
-        <div className="control">
-          <div className="control__head">
-            <span className="control__label" id="view-label">
-              Ausschnitt
-            </span>
-            <span className="control__readout">{formatNumber(view.viewHeight_um, 0)} µm</span>
-          </div>
-          <input
-            className="control__range"
-            type="range"
-            min={params.cellKind === 'plant' ? 60 : 8}
-            max={params.cellKind === 'plant' ? 260 : 40}
-            step={1}
-            value={view.viewHeight_um}
-            aria-labelledby="view-label"
-            onChange={(event) => onView({ ...view, viewHeight_um: Number(event.target.value) })}
-          />
+      </div>
+
+      <div className="control-bottom">
+        <div className="playback-buttons">
+          <button
+            type="button"
+            className={`primary-action${running ? ' is-playing' : ''}`}
+            onClick={onToggleRunning}
+            aria-pressed={running}
+          >
+            <span>{running ? 'Ⅱ' : '▶'}</span>
+            {running ? 'Pause' : 'Start'}
+          </button>
+          <button type="button" className="secondary-action" onClick={onReset}>
+            <span>↺</span> Zurücksetzen
+          </button>
         </div>
-        <div className="toggles">
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={view.showParticles}
-              onChange={(event) => onView({ ...view, showParticles: event.target.checked })}
-            />
-            Teilchen anzeigen
-          </label>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={view.showWaterArrows}
-              onChange={(event) => onView({ ...view, showWaterArrows: event.target.checked })}
-            />
-            Wasserfluss-Pfeile
-          </label>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={view.showIonFlux}
-              onChange={(event) => onView({ ...view, showIonFlux: event.target.checked })}
-            />
-            Ionenfluss-Pfeile
-          </label>
+        <div className="speed-control">
+          <label htmlFor="speed-select">Zeitfaktor</label>
+          <select id="speed-select" value={String(params.speed)} onChange={(event) => onSpeed(Number(event.target.value))}>
+            {SPEED_OPTIONS.map((value) => (
+              <option key={value} value={value}>
+                {value.replace('.', ',')}×
+              </option>
+            ))}
+          </select>
         </div>
-      </section>
-    </div>
+      </div>
+
+      <div className="direction-hint">
+        <span className={outward ? 'direction-arrow down' : 'direction-arrow'} aria-hidden="true">
+          {outward ? '↘' : '↗'}
+        </span>
+        {hint}
+      </div>
+    </section>
   );
-}
-
-export function cellKindLabel(kind: CellKind): string {
-  return kind === 'plant' ? 'Pflanzenzelle' : 'Tierische Zelle';
 }

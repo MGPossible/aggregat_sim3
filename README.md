@@ -6,7 +6,7 @@ rechnet Wasserverteilung, Turgor, Membranpotential und **Ionenteilchen** numeris
 und zeigt die Teilchen als Punkte – nicht nur als Pfeile.
 
 **Live nutzen:** im Browser öffnen, keine Installation, kein Server, kein Tracking.
-
+11
 ---
 
 ## 1. Was die Simulation kann
